@@ -1,18 +1,24 @@
 import React, { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { Sprout, Droplets, Mountain, Clock, Calendar, CheckCircle2, X, Coins, ShoppingBag, BarChart2 } from 'lucide-react';
-import { useGame } from '../GameContext';
 
-export default function CropEducationalModal({ crop, isOpen, onClose, onPlant, isFirstTime }) {
-  const { seedInventory } = useGame();
-  const [mounted, setMounted] = useState(false);
-  useEffect(() => setMounted(true), []);
+export default function CropEducationalModal({ crop, isOpen, onClose, onPlant, isFirstTime, seedInventory }) {
 
-  if (!isOpen || !crop || !mounted) return null;
+  if (!isOpen || !crop) return null;
 
   return createPortal(
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm animate-fade-in">
-      <div className="bg-white/90 backdrop-blur-xl w-full max-w-lg rounded-[2rem] shadow-2xl border border-white/50 overflow-hidden flex flex-col">
+    <div 
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm animate-fade-in"
+      onClick={e => e.stopPropagation()}
+      onWheel={e => e.stopPropagation()}
+      onPointerDown={e => e.stopPropagation()}
+      onPointerUp={e => e.stopPropagation()}
+      onPointerMove={e => e.stopPropagation()}
+      onTouchStart={e => e.stopPropagation()}
+      onTouchMove={e => e.stopPropagation()}
+      onTouchEnd={e => e.stopPropagation()}
+    >
+      <div className="bg-white/90 backdrop-blur-xl w-full max-w-lg max-h-[90vh] rounded-[2rem] shadow-2xl border border-white/50 overflow-hidden flex flex-col">
         
         {/* Header */}
         <div className="bg-gradient-to-br from-farm-green-light/40 to-emerald-100/40 p-6 pb-8 relative">

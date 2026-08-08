@@ -14,13 +14,13 @@ export default function FarmPlot({ position = [0, 0, 0], activeTool = 'cursor' }
   const groupRef = useRef();
   const materialRef = useRef();
   const { plantCrop: gamePlant, waterCrop: gameWater, harvestCrop: gameHarvest } = useGame();
-  
+
   // Plot States
   const [isHovered, setIsHovered] = useState(false);
   const [isSelected, setIsSelected] = useState(false);
   const [cropType, setCropType] = useState(null); // 'wheat', 'corn', 'carrot', 'tomato', 'potato', 'rice'
   const [growthStage, setGrowthStage] = useState(0); // 0: Seed, 1: Sprout, 2: Young, 3: Mature, 4: Harvest Ready
-  
+
   // Interaction States
   const [isWatered, setIsWatered] = useState(false);
   const [particleType, setParticleType] = useState(null); // 'water' or 'harvest'
@@ -35,12 +35,12 @@ export default function FarmPlot({ position = [0, 0, 0], activeTool = 'cursor' }
   // Smooth hover animation
   useFrame((state, delta) => {
     if (!groupRef.current || !materialRef.current) return;
-    
+
     const isActive = isHovered || isSelected;
     // Lerp position Y
     const targetY = isActive ? position[1] + 0.15 : position[1];
     groupRef.current.position.y = THREE.MathUtils.lerp(groupRef.current.position.y, targetY, delta * 10);
-    
+
     // Lerp color
     const targetColor = new THREE.Color(isActive ? "#92400e" : "#78350f");
     materialRef.current.color.lerp(targetColor, delta * 10);
@@ -60,7 +60,7 @@ export default function FarmPlot({ position = [0, 0, 0], activeTool = 'cursor' }
 
   const handleClick = (e) => {
     e.stopPropagation();
-    
+
     // Water tool interaction
     if (activeTool === 'water' && cropType && growthStage >= 0 && growthStage < 4 && !isWatered) {
       setParticleType('water');
@@ -86,11 +86,11 @@ export default function FarmPlot({ position = [0, 0, 0], activeTool = 'cursor' }
       gameHarvest(cropType);
       // Trigger scale down animation in Crop by setting invalid stage
       setGrowthStage(-1);
-      
+
       // Reset plot after animation
       setTimeout(() => {
         resetPlot();
-      }, 800); 
+      }, 800);
       return;
     }
 
@@ -144,8 +144,10 @@ export default function FarmPlot({ position = [0, 0, 0], activeTool = 'cursor' }
   };
 
   const handleTutorialPlant = () => {
-    markCropTutorialViewed(modalCrop.id);
-    executePlantCrop(modalCrop.id);
+    if (modalCrop) {
+      markCropTutorialViewed(modalCrop.id);
+      executePlantCrop(modalCrop.id, isWrongSeasonPlant);
+    }
   };
 
   const handleTutorialSkip = () => {
@@ -162,21 +164,13 @@ export default function FarmPlot({ position = [0, 0, 0], activeTool = 'cursor' }
   };
 
   const handlePlantAnyway = () => {
-    // 2. Even if planting anyway, check if they need the first-time tutorial
     const type = modalCrop.id;
     const hasViewed = stats.viewedCropTutorials?.[type];
-    
+
     if (!hasViewed) {
-      setIsFirstTimeTutorial(true);
-      setActiveModal('educational');
-      // The modal will call handleTutorialPlant, which doesn't know it's a wrong season.
-      // We must temporarily store this intent or just execute it if we update handleTutorialPlant.
-      // Wait, easiest fix: if they bypass wrong season, just skip first-time tutorial. 
-      // They chose to plant anyway.
-      executePlantCrop(type, true);
-    } else {
-      executePlantCrop(type, true);
+      markCropTutorialViewed(type);
     }
+    executePlantCrop(type, true);
   };
 
   const handleFailedHarvestClose = () => {
@@ -190,8 +184,8 @@ export default function FarmPlot({ position = [0, 0, 0], activeTool = 'cursor' }
   return (
     <group position={position} ref={groupRef}>
       {/* Dirt mound base */}
-      <mesh 
-        receiveShadow 
+      <mesh
+        receiveShadow
         castShadow
         onPointerOver={handlePointerOver}
         onPointerOut={handlePointerOut}
@@ -200,7 +194,7 @@ export default function FarmPlot({ position = [0, 0, 0], activeTool = 'cursor' }
         <boxGeometry args={[3, 0.4, 3]} />
         <meshStandardMaterial ref={materialRef} color="#78350f" roughness={1} />
       </mesh>
-      
+
       {/* Inner dirt */}
       <mesh receiveShadow position={[0, 0.21, 0]}>
         <boxGeometry args={[2.6, 0.05, 2.6]} />
@@ -209,7 +203,7 @@ export default function FarmPlot({ position = [0, 0, 0], activeTool = 'cursor' }
 
       {/* Moisture Indicator */}
       {isWatered && (
-        <mesh position={[1, 0.3, 1]} rotation={[-Math.PI/2, 0, 0]}>
+        <mesh position={[1, 0.3, 1]} rotation={[-Math.PI / 2, 0, 0]}>
           <planeGeometry args={[0.5, 0.5]} />
           <meshBasicMaterial color="#38bdf8" transparent opacity={0.6} />
         </mesh>
@@ -224,7 +218,7 @@ export default function FarmPlot({ position = [0, 0, 0], activeTool = 'cursor' }
       )}
 
       {/* Render Crop Model */}
-      {cropType && <Crop type={cropType} stage={growthStage} position={[0, 0.2, 0]} />}
+      {cropType && <Crop key={cropType} type={cropType} stage={growthStage} position={[0, 0.2, 0]} />}
 
       {/* Render Particles */}
       {particleType && <Particles type={particleType} position={[0, 1, 0]} onComplete={clearParticles} />}
@@ -239,11 +233,11 @@ export default function FarmPlot({ position = [0, 0, 0], activeTool = 'cursor' }
       {/* Modals outside group bounds via Html bridge */}
       {activeModal === 'wrong_season' && modalCrop && (
         <Html>
-          <WrongSeasonModal 
-            crop={modalCrop} 
-            currentSeason={season} 
-            isOpen={true} 
-            onClose={() => { setActiveModal(null); setIsSelected(false); }} 
+          <WrongSeasonModal
+            crop={modalCrop}
+            currentSeason={season}
+            isOpen={true}
+            onClose={() => { setActiveModal(null); setIsSelected(false); }}
             onPlantAnyway={handlePlantAnyway}
             onLearnMore={() => openCropInfo(modalCrop.id)}
           />
@@ -252,19 +246,20 @@ export default function FarmPlot({ position = [0, 0, 0], activeTool = 'cursor' }
 
       {activeModal === 'educational' && modalCrop && (
         <Html>
-          <CropEducationalModal 
+          <CropEducationalModal
             crop={modalCrop}
             isOpen={true}
             onClose={handleTutorialSkip}
-            onPlant={() => executePlantCrop(modalCrop.id, isWrongSeasonPlant)}
+            onPlant={handleTutorialPlant}
             isFirstTime={isFirstTimeTutorial}
+            seedInventory={seedInventory}
           />
         </Html>
       )}
 
       {activeModal === 'failed_harvest' && modalCrop && (
         <Html>
-          <FailedHarvestModal 
+          <FailedHarvestModal
             crop={modalCrop}
             isOpen={true}
             onClose={handleFailedHarvestClose}
@@ -289,10 +284,10 @@ const CropMenu = ({ onSelect, onInfo, seedInventory }) => {
     const rect = containerRef.current.getBoundingClientRect();
     let shiftX = 0;
     const padding = 16;
-    
+
     if (rect.left < padding) shiftX = padding - rect.left;
     if (rect.right > window.innerWidth - padding) shiftX = window.innerWidth - padding - rect.right;
-    
+
     if (shiftX !== 0) {
       containerRef.current.style.transform = `translateX(calc(-50% + ${shiftX}px))`;
     }
@@ -301,14 +296,18 @@ const CropMenu = ({ onSelect, onInfo, seedInventory }) => {
   const crops = Object.values(CROP_DATABASE);
 
   return (
-    <div 
-      className="absolute bottom-6 left-1/2 -translate-x-1/2 w-[340px]"
+    <div
+      className="absolute bottom-6 left-1/2 -translate-x-1/2 w-[90vw] max-w-[340px]"
+      onClick={stopEvent}
       onWheelCapture={stopEvent}
       onPointerDownCapture={stopEvent}
       onPointerMoveCapture={stopEvent}
       onPointerUpCapture={stopEvent}
+      onTouchStartCapture={stopEvent}
+      onTouchMoveCapture={stopEvent}
+      onTouchEndCapture={stopEvent}
     >
-      <div 
+      <div
         ref={containerRef}
         className="w-full bg-white/95 backdrop-blur-md p-4 rounded-[24px] shadow-2xl border border-slate-100 animate-popup-open origin-bottom"
       >
@@ -323,13 +322,12 @@ const CropMenu = ({ onSelect, onInfo, seedInventory }) => {
             const isOutOfStock = owned === 0;
 
             return (
-              <div key={c.id} className={`w-full rounded-2xl flex flex-col items-center p-2 transition-all duration-200 shadow-sm border ${
-                isOutOfStock ? 'bg-slate-100 border-slate-200 opacity-60 grayscale' : 'bg-slate-50 hover:bg-white border-slate-100 hover:border-farm-green'
-              }`}>
-                <button 
-                  onClick={(e) => { 
-                    e.stopPropagation(); 
-                    if (!isOutOfStock) onSelect(c.id); 
+              <div key={c.id} className={`w-full rounded-2xl flex flex-col items-center p-2 transition-all duration-200 shadow-sm border ${isOutOfStock ? 'bg-slate-100 border-slate-200 opacity-60 grayscale' : 'bg-slate-50 hover:bg-white border-slate-100 hover:border-farm-green'
+                }`}>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    if (!isOutOfStock) onSelect(c.id);
                   }}
                   className={`flex flex-col items-center w-full focus:outline-none ${isOutOfStock ? 'cursor-not-allowed' : ''}`}
                   disabled={isOutOfStock}
@@ -342,15 +340,14 @@ const CropMenu = ({ onSelect, onInfo, seedInventory }) => {
                     <span className="text-[10px] font-black text-farm-green-dark bg-farm-green-light px-2 py-0.5 rounded-full mt-0.5">{owned} Owned</span>
                   )}
                 </button>
-                
-                <button 
+
+                <button
                   onClick={(e) => { e.stopPropagation(); onInfo(c.id); }}
-                  className={`mt-2 w-full py-1.5 rounded-lg text-[10px] font-black flex items-center justify-center gap-1 transition-colors ${
-                    isOutOfStock ? 'bg-slate-200 text-slate-400' : 'bg-blue-50 hover:bg-blue-100 text-blue-600'
-                  }`}
+                  className={`mt-2 w-full py-2.5 rounded-lg text-[10px] font-black flex items-center justify-center gap-1 transition-colors relative after:absolute after:-inset-2 after:content-[""] after:z-10 ${isOutOfStock ? 'bg-slate-200 text-slate-400' : 'bg-blue-50 hover:bg-blue-100 text-blue-600'
+                    }`}
                   title="Crop Info"
                 >
-                  ⓘ Info
+                  <span className="relative z-20">ⓘ Info</span>
                 </button>
               </div>
             );

@@ -149,10 +149,14 @@ export default function Landing() {
         <div className="absolute inset-0 bg-farm-green-dark skew-y-3 transform origin-bottom-right -z-10 scale-110"></div>
         
         <div className="max-w-4xl mx-auto px-6 text-center text-white relative z-10">
-          <h2 className="text-4xl md:text-5xl font-black mb-8">About FARMEEZ</h2>
-          <p className="text-xl md:text-2xl font-medium leading-relaxed mb-12 text-farm-green-light">
-            We built FARMEEZ for the Smart India Hackathon to solve a critical problem: the gap between modern agricultural science and accessible education. By blending gaming and learning, we aim to inspire the next generation of sustainable farmers.
-          </p>
+       
+<h2 className="text-4xl md:text-5xl font-black mb-8 text-gray-900">
+  About FARMEEZ
+</h2>
+         
+<p className="text-xl md:text-2xl font-medium leading-relaxed mb-12 text-gray-800">
+  We built FARMEEZ for the Smart India Hackathon to solve a critical problem: the gap between modern agricultural science and accessible education. By blending gaming and learning, we aim to inspire the next generation of sustainable farmers.
+</p>
           <div className="inline-flex items-center gap-4 bg-white/10 backdrop-blur-md px-8 py-4 rounded-2xl border border-white/20">
              <div className="flex -space-x-4">
                {[1,2,3,4].map(i => (

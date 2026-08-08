@@ -3,14 +3,21 @@ import { createPortal } from 'react-dom';
 import { XCircle, Info, BookOpen } from 'lucide-react';
 
 export default function FailedHarvestModal({ crop, isOpen, onClose, onLearnMore }) {
-  const [mounted, setMounted] = useState(false);
-  useEffect(() => setMounted(true), []);
-
-  if (!isOpen || !crop || !mounted) return null;
+  if (!isOpen || !crop) return null;
 
   return createPortal(
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in">
-      <div className="bg-white w-full max-w-md rounded-[2rem] shadow-2xl border border-white/50 overflow-hidden flex flex-col">
+    <div 
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in"
+      onClick={e => e.stopPropagation()}
+      onWheel={e => e.stopPropagation()}
+      onPointerDown={e => e.stopPropagation()}
+      onPointerUp={e => e.stopPropagation()}
+      onPointerMove={e => e.stopPropagation()}
+      onTouchStart={e => e.stopPropagation()}
+      onTouchMove={e => e.stopPropagation()}
+      onTouchEnd={e => e.stopPropagation()}
+    >
+      <div className="bg-white w-full max-w-md max-h-[90vh] rounded-[2rem] shadow-2xl border border-white/50 overflow-hidden flex flex-col">
         
         {/* Header */}
         <div className="bg-gradient-to-br from-red-50 to-orange-50 p-6 pb-8 text-center relative border-b border-red-100">
@@ -26,7 +33,7 @@ export default function FailedHarvestModal({ crop, isOpen, onClose, onLearnMore 
         </div>
 
         {/* Content */}
-        <div className="p-6 bg-white flex flex-col gap-6">
+        <div className="p-6 bg-white flex flex-col gap-6 overflow-y-auto flex-1">
           
           <div className="bg-orange-50/50 p-4 rounded-2xl border border-orange-100">
             <h4 className="text-sm font-black text-orange-800 mb-2 flex items-center gap-1.5">
